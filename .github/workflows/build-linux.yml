@@ -109,11 +109,20 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Create source code archive (tar.gz)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          tar --exclude='.git' --exclude='node_modules' --exclude='src-tauri/target' --exclude='.svelte-kit' --exclude='build' --exclude='.github' -czf "source-code-v${VERSION}.tar.gz" .
+          ls -lh "source-code-v${VERSION}.tar.gz"
+
       - name: Publish to GitHub Release (on tag only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
-          files: src-tauri/target/release/bundle/appimage/currency-converter-v*.AppImage
+          files: |
+            src-tauri/target/release/bundle/appimage/currency-converter-v*.AppImage
+            source-code-v*.tar.gz
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
         env:
