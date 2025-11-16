@@ -275,6 +275,8 @@ npm run dev
 - **SvelteKit:** https://kit.svelte.dev/
 - **Rust:** https://www.rust-lang.org/
 - **Vite:** https://vitejs.dev/
+- **[CI/CD Pipeline](./.github/CI-CD.md)** — документация по GitHub Actions
+- **[Release Guide](./.github/RELEASE.md)** — как создавать релизы
 
 ## 📄 Лицензия
 

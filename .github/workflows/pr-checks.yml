@@ -1,0 +1,66 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [master, main, develop]
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang build-essential pkg-config libssl-dev
+
+      - name: Cache dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri'
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Check TypeScript/Svelte
+        run: npm run check
+
+      - name: Cargo check
+        working-directory: src-tauri
+        run: cargo check --verbose
+
+      - name: Cargo clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Cargo fmt check
+        working-directory: src-tauri
+        run: cargo fmt -- --check
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Summary
+        run: |
+          echo "✅ All PR checks passed!"
+          echo "- TypeScript/Svelte types: OK"
+          echo "- Rust compilation: OK"
+          echo "- Rust linting: OK"
+          echo "- Code formatting: OK"
+          echo "- Frontend build: OK"

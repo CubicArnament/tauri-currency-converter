@@ -1,5 +1,9 @@
 # Currency Converter
 
+[![Build Linux](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml/badge.svg?branch=master)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml)
+[![Lint & Type Check](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+
 Современное кроссплатформенное приложение для конвертации валют, построенное на **Tauri** (Rust) и **SvelteKit** (Svelte).
 
 ## ✨ Возможности
@@ -189,12 +193,41 @@ https://api.exchangerate-api.com/v4/latest/{CURRENCY}
 
 **MIT** — используйте свободно в коммерческих и личных проектах.
 
-## 🔗 Ресурсы
+---
+
+## ⚙️ CI/CD Pipeline
+
+Проект использует **GitHub Actions** для автоматической сборки и релизов:
+
+| Workflow | Триггер | Что делает |
+|----------|---------|-----------|
+| **build-linux** | Push / PR / Tag | Собирает Linux AppImage |
+| **lint** | Push / PR | Проверяет код (TypeScript, Rust) |
+| **pr-checks** | Pull Request | Полные проверки перед мерджем |
+| **release** | Tag `v*` | Создает GitHub Release |
+
+Смотрите подробную документацию в [`.github/CI-CD.md`](./.github/CI-CD.md)
+
+### Быстрый пример
+
+```bash
+# Автоматическая сборка Linux
+git push origin master
+
+# Создать релиз (сборка + GitHub Release)
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Артефакты и статусы: https://github.com/CubicArnament/tauri-currency-converter/actions
+
+---
 
 - [Tauri документация](https://tauri.app/)
 - [SvelteKit](https://kit.svelte.dev/)
 - [exchangerate-api](https://www.exchangerate-api.com/)
 - [Rust](https://www.rust-lang.org/)
+- [**CI/CD Pipeline** → см. .github/workflows/](https://github.com/CubicArnament/tauri-currency-converter/tree/master/.github/workflows)
 
 ---
 
