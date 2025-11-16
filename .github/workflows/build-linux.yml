@@ -2,11 +2,11 @@ name: Build Linux
 
 on:
   push:
-    branches: [master, main, develop]
+    branches: [main, develop]
     tags:
       - 'v*'
   pull_request:
-    branches: [master, main, develop]
+    branches: [main, develop]
 
 jobs:
   build-linux:

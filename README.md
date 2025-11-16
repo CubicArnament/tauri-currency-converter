@@ -2,9 +2,9 @@
 
 <div align="center">
 
-[![Build Linux](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml/badge.svg?branch=master)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml)
-[![Build Windows](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml/badge.svg?branch=master)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml)
-[![Lint & Type Check](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml)
+[![Build Linux](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml)
+[![Build Windows](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml)
+[![Lint & Type Check](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.md)
 
 **Современное кроссплатформенное приложение для конвертации валют**
@@ -308,7 +308,7 @@ Response:
 
 ```bash
 # Автоматическая сборка Linux + Windows (артефакты)
-git push origin master
+git push origin main
 
 # Создать релиз (сборка + GitHub Release с AppImage/EXE/MSI)
 git tag v0.1.0
