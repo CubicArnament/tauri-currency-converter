@@ -8,6 +8,7 @@
 .github/
   workflows/
     build-linux.yml      # Сборка Linux AppImage
+    build-windows.yml    # Сборка Windows EXE + MSI
     lint.yml            # Проверка кода (TypeScript, Rust)
     pr-checks.yml       # Проверки на Pull Requests
     release.yml         # Создание релизов
@@ -27,6 +28,24 @@
 **Выход:**
 - AppImage артефакт (GitHub Actions, 30 дней)
 - GitHub Release с AppImage (на тег)
+
+### build-windows.yml
+Собирает Windows EXE и MSI инсталлятор при push на основные ветки или теги.
+
+**Триггеры:**
+- Push на `master`, `main`, `develop`
+- Теги вида `v*` (для релизов)
+- Pull Requests
+
+**Выход:**
+- EXE артефакт (GitHub Actions, 30 дней)
+- MSI инсталлятор артефакт (GitHub Actions, 30 дней)
+- GitHub Release с EXE и MSI (на тег)
+
+**Среда:**
+- `windows-latest` (MSVC компилятор + link.exe уже установлены)
+- Node.js 20 LTS
+- Rust stable
 
 ### lint.yml
 Проверяет код качество.

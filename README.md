@@ -199,22 +199,23 @@ https://api.exchangerate-api.com/v4/latest/{CURRENCY}
 
 Проект использует **GitHub Actions** для автоматической сборки и релизов:
 
-| Workflow | Триггер | Что делает |
-|----------|---------|-----------|
-| **build-linux** | Push / PR / Tag | Собирает Linux AppImage |
-| **lint** | Push / PR | Проверяет код (TypeScript, Rust) |
-| **pr-checks** | Pull Request | Полные проверки перед мерджем |
-| **release** | Tag `v*` | Создает GitHub Release |
+| Workflow | Триггер | Платформа | Результат |
+|----------|---------|-----------|-----------|
+| **build-linux** | Push / PR / Tag | Linux | AppImage (30 дней) |
+| **build-windows** | Push / PR / Tag | Windows | EXE + MSI (30 дней) |
+| **lint** | Push / PR | — | Код качество |
+| **pr-checks** | Pull Request | — | Полные проверки |
+| **release** | Tag `v*` | — | GitHub Release |
 
 Смотрите подробную документацию в [`.github/CI-CD.md`](./.github/CI-CD.md)
 
 ### Быстрый пример
 
 ```bash
-# Автоматическая сборка Linux
+# Автоматическая сборка Linux + Windows
 git push origin master
 
-# Создать релиз (сборка + GitHub Release)
+# Создать релиз (сборка + GitHub Release с AppImage/EXE/MSI)
 git tag v0.1.0
 git push origin v0.1.0
 ```
