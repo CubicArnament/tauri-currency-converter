@@ -2,17 +2,19 @@
 # Builds the Currency Converter for Windows .exe using MSVC toolchain
 #
 # Requirements:
-#   - Visual Studio Build Tools 2022+ with C++ support
-#   - Node.js & npm installed
+#   - Node.js & npm installed (dependencies must already be installed: npm install)
 #   - Rust toolchain installed (via rustup)
+#   - Visual Studio Build Tools 2022+ with C++ support
 #
 # Usage: 
 #   powershell -ExecutionPolicy Bypass -File scripts/build-windows-msvc.ps1
 #   or: npm run build:windows-msvc
 #
+# Prerequisites:
+#  - Run 'npm install' once before using this script (installs Node + Rust dependencies)
+#
 # This script will:
 #  - Check prerequisites (npm, cargo, Visual Studio)
-#  - Install dependencies via npm install (Node + Rust)
 #  - Build frontend (vite build)
 #  - Build Rust/Tauri with MSVC
 #  - Create .exe bundle/installer
@@ -63,18 +65,6 @@ Write-Host "[+] Prerequisites OK" -ForegroundColor Green
 # Get project root
 $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Write-Host "[+] Project root: $projectRoot" -ForegroundColor Green
-
-# Install dependencies
-Write-Host "`n[*] Installing dependencies (npm install)..." -ForegroundColor Yellow
-Push-Location $projectRoot
-try {
-    npm install
-    if ($LASTEXITCODE -ne 0) {
-        throw "npm install failed"
-    }
-} finally {
-    Pop-Location
-}
 
 # Build frontend
 Write-Host "`n[*] Building frontend (npm run build)..." -ForegroundColor Yellow

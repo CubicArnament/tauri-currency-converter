@@ -1,225 +1,281 @@
-# Currency Converter (Tauri + SvelteKit)
+# Currency Converter - Development & Build Guide
 
-A cross-platform currency converter application built with Tauri (Rust backend) and SvelteKit (Svelte frontend).
+**Currency Converter** — это кроссплатформенное приложение для конвертации валют, построенное на Tauri (Rust) и SvelteKit (Svelte/JavaScript).
 
-## Features
+## 📋 Требования для разработки
 
-✅ **Realtime Conversion** — Two-way currency conversion with debounced API calls (200ms)  
-✅ **Caching** — In-memory cache + localStorage persistence (up to 200 entries)  
-✅ **Theme Toggle** — Light/dark mode with persistent storage  
-✅ **Offline Fallback** — Works in dev mode without Tauri backend  
-✅ **Cross-Platform** — Windows (.exe), Linux (AppImage), macOS support  
-✅ **Spinner & Badges** — Loading indicator and "cached" badge  
-✅ **Number Formatting** — Intl.NumberFormat for proper display  
+Для разработки и сборки приложения вам понадобятся:
 
-## Development
+### Общие требования (все платформы)
+- **Node.js 18+** и **npm** — https://nodejs.org/
+- **Rust** и **cargo** — установите через https://rustup.rs/
 
-### Prerequisites
+### Windows (MSVC)
+- **Visual Studio Build Tools 2022+** с поддержкой C++ — https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
-- **Node.js 18+** and npm
-- **Rust** ([install via rustup](https://rustup.rs/))
-- **Visual Studio Build Tools 2022+** (for Windows MSVC, optional)
-- **clang** (for Linux, install: `sudo apt install clang`)
+### Linux (clang)
+- **clang** и **clang++**:
+  ```bash
+  sudo apt update && sudo apt install clang
+  ```
 
-### Running Dev Server
+## 🚀 Быстрый старт
+
+### 1. Установка зависимостей (один раз)
 
 ```bash
 npm install
+```
+
+Это установит все Node.js и Rust зависимости.
+
+### 2. Запуск dev сервера
+
+**Вариант 1: Dev сервер без Tauri (быстро)**
+```bash
 npm run dev
 ```
+Откроется приложение на http://localhost:1420 с mock данными (без Tauri бекенда).
 
-This starts a Vite dev server on `http://localhost:1420`. The app works in dev mode with **fallback mock data** (no Tauri backend needed).
-
-**Note:** In dev mode without Tauri, conversion uses a mock rate (1 USD ≈ 0.92 EUR) for demonstration.
-
-### Running Tauri Dev (with backend)
-
-To test with Tauri backend and real API:
-
+**Вариант 2: Dev сервер с Tauri (полноценное приложение)**
 ```bash
-npm install
 npm run tauri:dev
 ```
+Откроется окно приложения с реальным Tauri бекендом и API конвертацией.
 
-This runs both frontend and Tauri backend, connecting to real currency API.
+## 🏗️ Сборка для продакшена
 
-## Building
-
-### Cross-Platform Builds
-
-All scripts automatically:
-- ✅ Check prerequisites (npm, cargo, compilers)
-- ✅ Run `npm install` (installs Node + Rust dependencies)
-- ✅ Build frontend
-- ✅ Build Rust backend
-- ✅ Create platform-specific bundle
-
-#### Windows (.exe) — Run on Windows with MSVC
-
-```powershell
-npm run build:windows-msvc
-```
-
-Or manually:
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build-windows-msvc.ps1
-```
-
-**Requirements:**
-- Visual Studio Build Tools 2022+ with C++ support
-- Run from "x64 Native Tools Command Prompt for VS" or ensure cl.exe is in PATH
-
-**Output:** `src-tauri/target/release/currency-converter.exe` + MSI installer
-
-#### Linux (AppImage) — Run on Linux with clang
-
-```bash
-npm run build:linux-clang
-```
-
-Or manually:
-```bash
-bash scripts/build-linux-clang.sh
-```
-
-**Requirements:**
-- clang compiler: `sudo apt install clang`
-
-**Output:** `src-tauri/target/release/bundle/appimage/currency-converter.AppImage` (portable executable)
-
-**Build uses:**
-- `export CC=clang CXX=clang++`
-- `export RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=lld"` (forces clang linker)
-
-### Production Build (Frontend only)
+### Сборка фронтенда (web version)
 
 ```bash
 npm run build
 ```
 
-Outputs static files to `./build/` directory (suitable for web hosting).
+Статические файлы будут в папке `build/`.
 
-### Type Checking
+### Сборка для Windows
 
-```bash
-npm run check        # Single check
-npm run check:watch  # Watch mode
-```
+**Требования:**
+- Visual Studio Build Tools 2022+ (MSVC)
+- Компилятор `cl.exe` в PATH
+  
+  **Если `cl.exe` не найден:** откройте "x64 Native Tools Command Prompt for VS" из меню Start
 
-## Project Structure
+**Шаги сборки:**
+
+1. Убедитесь, что dependencies установлены:
+   ```bash
+   npm install
+   ```
+
+2. Запустите сборку:
+   ```bash
+   npm run build:windows-msvc
+   ```
+
+   или вручную:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/build-windows-msvc.ps1
+   ```
+
+**Результаты:**
+- Исполняемый файл: `src-tauri/target/release/currency-converter.exe`
+- Инсталлятор MSI: `src-tauri/target/release/bundle/msi/`
+
+### Сборка для Linux
+
+**Требования:**
+- `clang` и `clang++`:
+  ```bash
+  sudo apt update && sudo apt install clang
+  ```
+
+**Шаги сборки:**
+
+1. Убедитесь, что dependencies установлены:
+   ```bash
+   npm install
+   ```
+
+2. Запустите сборку:
+   ```bash
+   npm run build:linux-clang
+   ```
+
+   или вручную:
+   ```bash
+   bash scripts/build-linux-clang.sh
+   ```
+
+**Результаты:**
+- AppImage (portable): `src-tauri/target/release/bundle/appimage/currency-converter.AppImage`
+- Бинарник: `src-tauri/target/release/currency-converter`
+
+## 📁 Структура проекта
 
 ```
 src/
   routes/
-    +page.svelte          # Main component
-    +page.css             # Styles (separate file)
+    +page.svelte          # Главный компонент приложения
+    +page.css             # Стили
     +layout.js            # SvelteKit layout
 
 src-tauri/
   src/
-    lib.rs                # Tauri command handlers
-    main.rs               # Tauri app entry
-  Cargo.toml
+    lib.rs                # Tauri команды (get_currencies, convert_currency)
+    main.rs               # Entry point
+  Cargo.toml              # Rust зависимости
 
 scripts/
-  build-windows-msvc.ps1  # PowerShell: Windows MSVC → .exe
-  build-linux-clang.sh    # Bash: Linux clang → AppImage
+  build-windows-msvc.ps1  # Скрипт сборки для Windows
+  build-linux-clang.sh    # Скрипт сборки для Linux
 
-package.json
-vite.config.js
-svelte.config.js
+package.json              # Node.js зависимости и скрипты
+Cargo.toml               # Cargo workspace
 ```
 
-## Architecture
+## 🔧 npm Скрипты
 
-### Frontend (Svelte)
+| Скрипт | Описание | Платформа |
+|--------|---------|-----------|
+| `npm run dev` | Dev сервер SvelteKit | Все |
+| `npm run tauri:dev` | Dev приложение с Tauri | Все |
+| `npm run build` | Сборка фронтенда | Все |
+| `npm run tauri:build` | Сборка Tauri (текущая платформа) | Все |
+| `npm run build:windows-msvc` | Сборка для Windows (MSVC) | Windows |
+| `npm run build:linux-clang` | Сборка для Linux (clang) | Linux |
+| `npm run check` | Проверка типов TypeScript/Svelte | Все |
+| `npm run check:watch` | Проверка типов в режиме watch | Все |
 
-- **Reactive state** using Svelte `$state` runes
-- **Effects** (`$effect`) for reactive theme application
-- **Debounced conversion** (200ms) for performance
-- **localStorage persistence** for cache and theme
-- **Conditional Tauri invoke** with fallback for dev mode
-- **CSS-in-JS theme switching** via `:global(.theme-dark)` CSS class
+## 🌍 Поддерживаемые валюты (50+)
 
-### Backend (Tauri/Rust)
+**Основные:** USD, EUR, GBP, JPY, CHF
 
-- **get_currencies**: Fetches available currencies via Frankfurter API
-- **convert_currency**: Calls Frankfurter API to get exchange rates
-- Built with `reqwest` for HTTP requests
+**Азия-Тихий океан:** CNY, INR, SGD, HKD, AUD, NZD, THB, MYR, IDR
 
-## Troubleshooting
+**Америки:** CAD, MXN, BRL, ARS, CLP
 
-### Theme not changing
+**Европа:** SEK, NOK, DKK, PLN, CZK, HUF, RON
 
-The theme toggle button should switch light/dark mode. If not working:
-1. Check browser console for errors
-2. Ensure localStorage is enabled
-3. Try hard refresh (Ctrl+Shift+R)
+**Африка & Ближний Восток:** ZAR, SAR, AED, TRY
 
-### "Tauri not available" warning in dev mode
+**Страны СНГ:** RUB, KZT, UAH, BYN, AMD, GEL, UZS, KGS, TJS
 
-This is **expected and harmless**. The app falls back to mock data for currency selection and conversion. It shows when running `npm run dev` without Tauri backend.
+## 💾 Кеширование данных
 
-### Build errors on Windows
+### Фронтенд (localStorage)
+- Хранит последние 200 конверсий в браузер-памяти
+- Кеш автоматически сохраняется в `localStorage`
+- Помечаются как "(cached)" в результатах
 
-Ensure **Visual Studio Build Tools 2022** is installed with C++ support:
-1. Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
-2. Run in "x64 Native Tools Command Prompt for VS"
-3. Try: `npm run build:windows-msvc`
+### Бекенд (Rust) - **TTL 5 минут**
+- Глобальный кеш в памяти с автоматическим истечением
+- Ключ: `BASE_CURRENCY|TARGET_CURRENCY|AMOUNT`
+- Автоматически очищает устаревшие записи каждые 5 минут
+- Уменьшает нагрузку на API и ускоряет повторные запросы
 
-### Build errors on Linux
+## 🎨 Темы
 
-Ensure clang is installed:
+Приложение поддерживает светлую и темную тему:
+- Переключатель в верхнем правом углу
+- Тема сохраняется в `localStorage`
+- CSS переменные в `:root` и `.theme-dark`
+
+## 🔄 API Интеграция
+
+Используется **exchangerate-api.com** (бесплатный, без авторизации):
+- Endpoint: `https://api.exchangerate-api.com/v4/latest/{CURRENCY}`
+- Поддерживает все 50+ валют
+- Без лимитов для dev/personal use
+- Результаты кешируются на бекенде на 5 минут
+
+## ⚙️ Особенности архитектуры
+
+### Фронтенд (Svelte)
+- Реактивное состояние через `$state` runes
+- Debounce 200ms при вводе
+- Условный invoke Tauri с fallback для dev режима
+- localStorage для кеша и темы
+
+### Бекенд (Rust/Tauri)
+- Асинхронные команды Tauri
+- Встроенный кеш с TTL 5 минут (lazy_static)
+- Обработка ошибок с `Result<T, String>`
+- Поддержка Windows, Linux, macOS
+
+## 🐛 Отладка
+
+### Dev режим без Tauri
+
 ```bash
-sudo apt update && sudo apt install clang
-npm run build:linux-clang
+npm run dev
 ```
 
-### PostCSS errors on dev server
+Удобно для разработки фронтенда. Использует mock данные:
+- 50+ популярных валют
+- Фиксированный курс конвертации (1 USD ≈ 0.92 EUR)
 
-This has been fixed by separating styles into `+page.css`. If issues persist:
+### Консоль и логи
+
+В браузере (F12) видны все ошибки и логи:
+```javascript
+console.warn('Tauri not available, using fallback currencies');
+console.error('convertFrom error', e);
+```
+
+### Сборка с отладкой (debug mode)
+
 ```bash
+# Windows или Linux
+cd src-tauri && cargo build
+```
+
+Бинарник будет в `src-tauri/target/debug/`.
+
+## 📝 Типичные проблемы
+
+### ❌ "npm install failed" (Windows)
+- Убедитесь, что Node.js и npm установлены: `node -v && npm -v`
+- Очистите npm кеш: `npm cache clean --force`
+- Перезагрузите компьютер
+
+### ❌ "cl.exe not found" (Windows)
+- Установите Visual Studio Build Tools с C++ поддержкой
+- Откройте "x64 Native Tools Command Prompt for VS" и запустите сборку оттуда
+- Проверьте PATH: `where cl`
+
+### ❌ "clang not found" (Linux)
+```bash
+sudo apt update
+sudo apt install clang build-essential
+```
+
+### ❌ "cargo not found"
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+```
+
+### ❌ Tauri dev выдает ошибки на Windows
+- Закройте все окна приложения
+- Удалите `src-tauri/target/debug/`
+- Запустите `npm run tauri:dev` снова
+
+### ❌ Frontend не обновляется при dev
+
+```bash
+# Очистьте Vite кеш
 rm -rf node_modules/.vite .svelte-kit
 npm run dev
 ```
 
-## Scripts Summary
+## 📚 Дополнительные ресурсы
 
-| Script | Purpose | Output |
-|--------|---------|--------|
-| `npm run dev` | Dev server (SvelteKit only) | Local dev at http://localhost:1420 |
-| `npm run tauri:dev` | Tauri dev (full app with backend) | App window + dev server |
-| `npm run build` | Frontend build | Static files in `./build/` |
-| `npm run tauri:build` | Tauri build (current platform) | Binary + bundle in `src-tauri/target/release/` |
-| `npm run build:windows-msvc` | Windows cross-build | `.exe` + MSI installer |
-| `npm run build:linux-clang` | Linux cross-build | AppImage executable |
-| `npm run check` | TypeScript/Svelte check | Type validation |
+- **Tauri документация:** https://tauri.app/
+- **SvelteKit:** https://kit.svelte.dev/
+- **Rust:** https://www.rust-lang.org/
+- **Vite:** https://vitejs.dev/
 
-## API Integration
-
-The app uses the **Frankfurter API** (free, no auth required):
-- Endpoint: `https://api.frankfurter.app/`
-- Currencies: `/currencies`
-- Conversion: `/latest?from=USD&to=EUR&amount=1`
-
-## Cache
-
-- **In-memory**: Map-based cache during session
-- **localStorage**: Persists up to 200 conversion entries
-- **Key format**: `FROM|TO|AMOUNT` (e.g., `USD|EUR|100.000000`)
-- **Badge**: "cached" indicator appears when using cached result
-
-## Theme
-
-CSS variables in `:root` and `:global(.theme-dark)`:
-- `--primary-color`: Main accent color
-- `--secondary-color`: Background/input color
-- `--text-color`: Text color
-- `--white`: Background color
-- `--shadow`: Box shadow
-
-Switch theme via button in top-right corner.
-
-## License
+## 📄 Лицензия
 
 MIT

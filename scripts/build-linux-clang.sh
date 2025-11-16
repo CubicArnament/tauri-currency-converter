@@ -5,14 +5,16 @@ set -euo pipefail
 # Builds the Currency Converter for Linux AppImage using clang
 #
 # Requirements:
-#   - Node.js & npm installed
+#   - Node.js & npm installed (dependencies must already be installed: npm install)
 #   - Rust toolchain installed (via rustup)
 #   - clang & clang++ installed (apt install clang)
 #
 # Usage: bash scripts/build-linux-clang.sh
 #
+# Prerequisites:
+#  - Run 'npm install' once before using this script (installs Node + Rust dependencies)
+#
 # This script will:
-#  - Install dependencies via npm install (Node + Rust)
 #  - Build frontend (vite build)
 #  - Build Rust/Tauri with clang toolchain and flags
 #  - Create AppImage bundle
@@ -30,15 +32,10 @@ command -v clang++ >/dev/null 2>&1 || { echo "ERROR: clang++ not found. Install:
 
 echo "[+] All prerequisites found"
 
-# Install dependencies (installs both Node and Rust dependencies)
-echo ""
-echo "==> Installing dependencies (npm install)"
-cd "$ROOT_DIR"
-npm install
-
 # Build frontend
 echo ""
 echo "==> Building frontend (npm run build)"
+cd "$ROOT_DIR"
 npm run build
 
 # Build Tauri with clang and RUSTFLAGS for clang linker
