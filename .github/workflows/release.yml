@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+permissions:
+  contents: write
 
 jobs:
   draft-release:
@@ -41,7 +43,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
           name: Currency Converter ${{ steps.release.outputs.VERSION }}
           body: |
             # Currency Converter v${{ steps.release.outputs.VERSION }}
