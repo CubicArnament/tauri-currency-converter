@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH, Duration};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Deserialize, Debug)]
 struct ExchangeRateResponse {
@@ -47,23 +47,26 @@ fn set_cache(key: String, value: f64) {
             let now = get_current_timestamp();
             cache.retain(|_, entry| now - entry.timestamp < CACHE_TTL_SECS);
         }
-        cache.insert(key, CacheEntry {
-            value,
-            timestamp: get_current_timestamp(),
-        });
+        cache.insert(
+            key,
+            CacheEntry {
+                value,
+                timestamp: get_current_timestamp(),
+            },
+        );
     }
 }
 
 fn get_currency_names() -> HashMap<String, String> {
     let mut names = HashMap::new();
-    
+
     // Major global currencies
     names.insert("USD".to_string(), "United States Dollar".to_string());
     names.insert("EUR".to_string(), "Euro".to_string());
     names.insert("GBP".to_string(), "British Pound".to_string());
     names.insert("JPY".to_string(), "Japanese Yen".to_string());
     names.insert("CHF".to_string(), "Swiss Franc".to_string());
-    
+
     // Asia-Pacific
     names.insert("CNY".to_string(), "Chinese Yuan".to_string());
     names.insert("INR".to_string(), "Indian Rupee".to_string());
@@ -74,14 +77,14 @@ fn get_currency_names() -> HashMap<String, String> {
     names.insert("THB".to_string(), "Thai Baht".to_string());
     names.insert("MYR".to_string(), "Malaysian Ringgit".to_string());
     names.insert("IDR".to_string(), "Indonesian Rupiah".to_string());
-    
+
     // Americas
     names.insert("CAD".to_string(), "Canadian Dollar".to_string());
     names.insert("MXN".to_string(), "Mexican Peso".to_string());
     names.insert("BRL".to_string(), "Brazilian Real".to_string());
     names.insert("ARS".to_string(), "Argentine Peso".to_string());
     names.insert("CLP".to_string(), "Chilean Peso".to_string());
-    
+
     // Europe (non-EUR)
     names.insert("SEK".to_string(), "Swedish Krona".to_string());
     names.insert("NOK".to_string(), "Norwegian Krone".to_string());
@@ -90,13 +93,13 @@ fn get_currency_names() -> HashMap<String, String> {
     names.insert("CZK".to_string(), "Czech Koruna".to_string());
     names.insert("HUF".to_string(), "Hungarian Forint".to_string());
     names.insert("RON".to_string(), "Romanian Leu".to_string());
-    
+
     // Africa & Middle East
     names.insert("ZAR".to_string(), "South African Rand".to_string());
     names.insert("SAR".to_string(), "Saudi Arabian Riyal".to_string());
     names.insert("AED".to_string(), "United Arab Emirates Dirham".to_string());
     names.insert("TRY".to_string(), "Turkish Lira".to_string());
-    
+
     // CIS countries
     names.insert("RUB".to_string(), "Russian Ruble".to_string());
     names.insert("KZT".to_string(), "Kazakhstani Tenge".to_string());
@@ -107,7 +110,7 @@ fn get_currency_names() -> HashMap<String, String> {
     names.insert("UZS".to_string(), "Uzbekistani Som".to_string());
     names.insert("KGS".to_string(), "Kyrgyzstani Som".to_string());
     names.insert("TJS".to_string(), "Tajikistani Somoni".to_string());
-    
+
     names
 }
 
@@ -132,15 +135,15 @@ async fn convert_currency(
     if base_currency == target_currency {
         return Ok(amount);
     }
-    
+
     // Generate cache key
     let cache_key = format!("{}|{}|{:.6}", base_currency, target_currency, amount);
-    
+
     // Check cache first
     if let Some(cached_value) = get_cached_conversion(&cache_key) {
         return Ok(cached_value);
     }
-    
+
     // Using exchangerate-api.com which supports CIS currencies
     let url = format!(
         "https://api.exchangerate-api.com/v4/latest/{}",
@@ -155,10 +158,10 @@ async fn convert_currency(
 
     if let Some(rate) = resp.rates.get(&target_currency) {
         let result = amount * rate;
-        
+
         // Store in cache
         set_cache(cache_key, result);
-        
+
         Ok(result)
     } else {
         Err(format!("Target currency {} not found", target_currency))
@@ -169,7 +172,11 @@ async fn convert_currency(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, convert_currency, get_currencies])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            convert_currency,
+            get_currencies
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

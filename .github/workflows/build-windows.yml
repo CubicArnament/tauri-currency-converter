@@ -138,18 +138,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            src-tauri/target/release/currency-converter-v*.exe
-            src-tauri/target/release/bundle/msi/currency-converter-v*.msi
-          draft: false
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      
       - name: Print build summary
         shell: pwsh
         run: |
