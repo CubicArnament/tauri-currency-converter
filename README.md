@@ -5,6 +5,8 @@
 [![Build Linux](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml)
 [![Build Windows](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml)
 [![Lint & Type Check](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml)
+[![Latest Release](https://img.shields.io/github/v/release/CubicArnament/tauri-currency-converter?style=flat-square&label=Latest%20Release)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/CubicArnament/tauri-currency-converter/total?style=flat-square&label=Downloads)](https://github.com/CubicArnament/tauri-currency-converter/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.md)
 
 **Современное кроссплатформенное приложение для конвертации валют**
@@ -64,13 +66,13 @@ npm run tauri:dev
 
 ### Готовые сборки
 
-Скачайте последнюю версию для вашей платформы:
+Скачайте последнюю версию для вашей платформы. Все сборки автоматически создаются при публикации новой версии:
 
-| Платформа | Формат | Ссылка |
-|-----------|--------|--------|
-| **Windows** | `.exe` | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases) |
-| **Windows** | `.msi` | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases) |
-| **Linux** | `AppImage` | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases) |
+| Платформа | Формат | Ссылка | Пакет |
+|-----------|--------|--------|-------|
+| **Windows** | `.exe` (Портативный) | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download EXE](https://img.shields.io/badge/Download-EXE-blue?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
+| **Windows** | `.msi` (Инсталлятор) | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download MSI](https://img.shields.io/badge/Download-MSI-blue?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
+| **Linux** | `AppImage` | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download AppImage](https://img.shields.io/badge/Download-AppImage-blue?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
 
 ### Установка на Linux
 
