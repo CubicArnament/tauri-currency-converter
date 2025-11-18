@@ -30,6 +30,29 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "windows": [
+      {
+        "wix": {
+          "license": "../LICENSE.md",
+          "dialogImagePath": "",
+          "bannerPath": "",
+          "certificatePath": null,
+          "certificatePassword": null,
+          "diskPath": "",
+          "headerArch": "x64",
+          "binaries": [],
+          "installScope": "perMachine",
+          "languages": [
+            {
+              "languageId": "1033",
+              "languageName": "English (United States)"
+            }
+          ],
+          "fragmentPaths": [],
+          "componentGroupRefs": []
+        }
+      }
     ]
   }
 }

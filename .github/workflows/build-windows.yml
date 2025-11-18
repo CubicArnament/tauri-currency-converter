@@ -40,6 +40,12 @@ jobs:
           # We just need to ensure we have the necessary SDK components
           # Check MSVC is available
           where cl.exe
+          
+          # Install WiX Toolset for MSI generation
+          # Download WiX v3.14.1
+          Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314.exe" -OutFile "$env:TEMP\wix314.exe"
+          & "$env:TEMP\wix314.exe" /install /quiet /norestart
+          Write-Host "WiX Toolset installed"
 
       - name: Cache Rust build
         uses: swatinem/rust-cache@v2
@@ -146,6 +152,27 @@ jobs:
           git archive --format=zip --prefix="currency-converter-v${version}/" -o "source-code-v${version}.zip" HEAD
           ls -lh "source-code-v${version}.zip"
 
+      - name: Debug - List all artifacts before release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          Write-Host "=== Checking for release files ==="
+          Write-Host "EXE files:"
+          Get-ChildItem -Path "src-tauri/target/release" -Filter "currency-converter-v*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  - $($_.FullName)" }
+          if (-not (Get-ChildItem -Path "src-tauri/target/release" -Filter "currency-converter-v*.exe" -ErrorAction SilentlyContinue)) { Write-Host "  Not found" }
+          
+          Write-Host "MSI files:"
+          Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter "currency-converter-v*.msi" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  - $($_.FullName)" }
+          if (-not (Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter "currency-converter-v*.msi" -ErrorAction SilentlyContinue)) { Write-Host "  Not found" }
+          
+          Write-Host "Source archive:"
+          Get-ChildItem -Path "." -Filter "source-code-v*.zip" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  - $($_.FullName)" }
+          if (-not (Get-ChildItem -Path "." -Filter "source-code-v*.zip" -ErrorAction SilentlyContinue)) { Write-Host "  Not found" }
+          
+          Write-Host ""
+          Write-Host "=== Full bundle directory tree ==="
+          Get-ChildItem -Path "src-tauri/target/release/bundle" -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 20 | ForEach-Object { Write-Host "  $($_.FullName)" }
+
       - name: Publish to GitHub Release (on tag only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
@@ -167,9 +194,7 @@ jobs:
           Write-Host "Version: v${{ steps.version.outputs.VERSION }}"
           Write-Host ""
           Write-Host "📦 Artifacts:"
-          if (Test-Path "src-tauri/target/release/currency-converter-v*.exe") {
-            Get-ChildItem "src-tauri/target/release/currency-converter-v*.exe" | ForEach-Object { Write-Host "  - $($_.Name) ($([Math]::Round($_.Length/1MB, 2)) MB)" }
-          }
-          if (Test-Path "src-tauri/target/release/bundle/msi/currency-converter-v*.msi") {
-            Get-ChildItem "src-tauri/target/release/bundle/msi/currency-converter-v*.msi" | ForEach-Object { Write-Host "  - $($_.Name) ($([Math]::Round($_.Length/1MB, 2)) MB)" }
-          }
+          Write-Host "Portable EXE:"
+          Get-ChildItem "src-tauri/target/release/currency-converter-v*.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  - $($_.Name) ($([Math]::Round($_.Length/1MB, 2)) MB)" }
+          Write-Host "MSI Installer:"
+          Get-ChildItem "src-tauri/target/release/bundle/msi/currency-converter-v*.msi" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  - $($_.Name) ($([Math]::Round($_.Length/1MB, 2)) MB)" }

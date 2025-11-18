@@ -72,14 +72,26 @@ npm run tauri:dev
 |-----------|--------|--------|-------|
 | **Windows** | `.exe` (Портативный) | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download EXE](https://img.shields.io/badge/Download-EXE-blue?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
 | **Windows** | `.msi` (Инсталлятор) | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download MSI](https://img.shields.io/badge/Download-MSI-blue?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
-| **Linux** | `AppImage` | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download AppImage](https://img.shields.io/badge/Download-AppImage-blue?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
+| **Linux** | `.AppImage` | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download AppImage](https://img.shields.io/badge/Download-AppImage-blue?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
+| **Linux** | `.deb` (Debian) | [GitHub Releases](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) | [![Download DEB](https://img.shields.io/badge/Download-DEB-red?style=flat-square)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest) |
 
 ### Установка на Linux
 
+**AppImage (универсальный способ):**
 ```bash
 # Скачайте AppImage
 chmod +x currency-converter-v*.AppImage
 ./currency-converter-v*.AppImage
+```
+
+**DEB пакет (для Debian/Ubuntu/Linux Mint):**
+```bash
+# Скачайте .deb файл и установите
+sudo apt install ./currency-converter-v*.deb
+
+# Или через dpkg
+sudo dpkg -i currency-converter-v*.deb
+sudo apt install -f  # Install dependencies if needed
 ```
 
 ### Установка на Windows
