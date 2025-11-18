@@ -11,10 +11,10 @@
 
 /* Dark theme */
 html.theme-dark {
-  --primary-color: #8a7ef0;
-  --secondary-color: #1e1e26;
-  --text-color: #e6e6e6;
-  --white: #0f0f15;
+  --primary-color: #9b8ff5;
+  --secondary-color: #2a2a35;
+  --text-color: #f5f5f5;
+  --white: #1a1a22;
   --shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
