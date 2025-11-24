@@ -51,8 +51,6 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: 'src-tauri'
-          save-if-unchanged: false
-          cache-all-crates: true
 
       - name: Install Node dependencies
         run: npm install
@@ -61,13 +59,6 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-
-      - name: Clean Cargo build cache for fresh version read
-        shell: pwsh
-        run: |
-          Remove-Item -Path "src-tauri/target" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "$env:USERPROFILE\.cargo\registry\cache" -Recurse -Force -ErrorAction SilentlyContinue
-          Write-Host "Cleaned cargo cache"
 
       - name: Build Tauri app
         run: cargo build --release --target ${{ matrix.target }}
@@ -153,6 +144,14 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Create source code archive (zip)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.VERSION }}"
+          git archive --format=zip --prefix="currency-converter-v${version}/" -o "source-code-v${version}.zip" HEAD
+          ls -lh "source-code-v${version}.zip"
+
       - name: Debug - List all artifacts before release
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
@@ -181,6 +180,7 @@ jobs:
           files: |
             src-tauri/target/release/currency-converter-v*.exe
             src-tauri/target/release/bundle/msi/currency-converter-v*.msi
+            source-code-v*.zip
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
         env:
