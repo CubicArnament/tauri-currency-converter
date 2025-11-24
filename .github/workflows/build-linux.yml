@@ -58,8 +58,10 @@ jobs:
           NODE_ENV: production
 
       - name: Clean Cargo build cache for fresh version read
-        run: cargo clean --release
-        working-directory: src-tauri
+        run: |
+          rm -rf src-tauri/target/release/build
+          rm -rf src-tauri/target/release/deps
+          rm -rf src-tauri/target/release/.fingerprint
 
       - name: Build Tauri app
         run: cargo build --release
