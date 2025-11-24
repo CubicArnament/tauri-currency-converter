@@ -48,6 +48,8 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: 'src-tauri'
+          save-if-unchanged: false
+          cache-all-crates: true
 
       - name: Install Node dependencies
         run: npm install
@@ -59,9 +61,8 @@ jobs:
 
       - name: Clean Cargo build cache for fresh version read
         run: |
-          rm -rf src-tauri/target/release/build
-          rm -rf src-tauri/target/release/deps
-          rm -rf src-tauri/target/release/.fingerprint
+          rm -rf src-tauri/target/release
+          echo "Cleaned src-tauri/target/release"
 
       - name: Build Tauri app
         run: cargo build --release
