@@ -60,6 +60,10 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Clean Cargo build cache for fresh version read
+        run: cargo clean --release
+        working-directory: src-tauri
+
       - name: Build Tauri app
         run: cargo build --release --target ${{ matrix.target }}
         working-directory: src-tauri
