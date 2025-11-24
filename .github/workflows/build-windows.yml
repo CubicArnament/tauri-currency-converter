@@ -48,6 +48,18 @@ jobs:
       - name: Install Node dependencies
         run: npm install
 
+      - name: Generate nightly version
+        if: github.ref == 'refs/heads/nightly'
+        id: nightly_version
+        shell: pwsh
+        run: |
+          $commits = git rev-list --count HEAD
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $new_version = "$version-nightly.$commits"
+          "VERSION=$new_version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          (Get-Content package.json) -replace "\"version\": \"$version\"", "\"version\": \"$new_version\"" | Set-Content package.json
+          (Get-Content src-tauri/tauri.conf.json) -replace "\"version\": \"$version\"", "\"version\": \"$new_version\"" | Set-Content src-tauri/tauri.conf.json
+
       - name: Check TypeScript compilation
         run: npm run check:ts
 
@@ -143,8 +155,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/nightly'
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ github.ref == 'refs/heads/nightly' && 'Nightly Build' || github.ref_name }}
-          tag_name: ${{ github.ref == 'refs/heads/nightly' && format('nightly-{0}-{1}', steps.version.outputs.VERSION, github.sha) || github.ref_name }}
+          name: ${{ github.ref == 'refs/heads/nightly' && format('Nightly Build {0}', steps.nightly_version.outputs.VERSION) || github.ref_name }}
+          tag_name: ${{ github.ref == 'refs/heads/nightly' && format('nightly-{0}', steps.nightly_version.outputs.VERSION) || github.ref_name }}
           files: |
             src-tauri/target/release/currency-converter-v*.exe
             src-tauri/target/release/bundle/msi/currency-converter-v*.msi
