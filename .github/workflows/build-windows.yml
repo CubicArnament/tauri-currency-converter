@@ -50,6 +50,12 @@ jobs:
       - name: Install Node dependencies
         run: npm install
 
+      - name: Check TypeScript compilation
+        run: npm run check:ts
+
+      - name: Check TypeScript/Svelte types
+        run: npm run check:svelte
+
       - name: Build frontend
         run: npm run build
         env:

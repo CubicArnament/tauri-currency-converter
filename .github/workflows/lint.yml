@@ -23,8 +23,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run TypeScript/Svelte check
-        run: npm run check
+      - name: Run TypeScript compilation check
+        run: npm run check:ts
+
+      - name: Run TypeScript/Svelte types check
+        run: npm run check:svelte
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

@@ -2,15 +2,16 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use rust_decimal::Decimal;
 
 #[derive(Deserialize, Debug)]
 struct ExchangeRateResponse {
-    rates: HashMap<String, f64>,
+    rates: HashMap<String, Decimal>,
 }
 
 #[derive(Clone, Debug)]
 struct CacheEntry {
-    value: f64,
+    value: Decimal,
     timestamp: u64,
 }
 
@@ -28,7 +29,7 @@ fn get_current_timestamp() -> u64 {
         .as_secs()
 }
 
-fn get_cached_conversion(key: &str) -> Option<f64> {
+fn get_cached_conversion(key: &str) -> Option<Decimal> {
     if let Ok(cache) = CONVERSION_CACHE.lock() {
         if let Some(entry) = cache.get(key) {
             let now = get_current_timestamp();
@@ -40,7 +41,7 @@ fn get_cached_conversion(key: &str) -> Option<f64> {
     None
 }
 
-fn set_cache(key: String, value: f64) {
+fn set_cache(key: String, value: Decimal) {
     if let Ok(mut cache) = CONVERSION_CACHE.lock() {
         // Clean old entries if cache is too large
         if cache.len() > 1000 {
@@ -130,18 +131,22 @@ async fn get_currencies() -> Result<HashMap<String, String>, String> {
 async fn convert_currency(
     base_currency: String,
     target_currency: String,
-    amount: f64,
-) -> Result<f64, String> {
+    amount: String,
+) -> Result<String, String> {
     if base_currency == target_currency {
         return Ok(amount);
     }
 
+    // Parse amount from string to Decimal for precision
+    let amount_decimal = Decimal::from_str_exact(&amount)
+        .map_err(|_| "Invalid amount format".to_string())?;
+
     // Generate cache key
-    let cache_key = format!("{}|{}|{:.6}", base_currency, target_currency, amount);
+    let cache_key = format!("{}|{}|{}", base_currency, target_currency, amount);
 
     // Check cache first
     if let Some(cached_value) = get_cached_conversion(&cache_key) {
-        return Ok(cached_value);
+        return Ok(cached_value.to_string());
     }
 
     // Using exchangerate-api.com which supports CIS currencies
@@ -157,12 +162,12 @@ async fn convert_currency(
         .map_err(|e| e.to_string())?;
 
     if let Some(rate) = resp.rates.get(&target_currency) {
-        let result = amount * rate;
+        let result = amount_decimal * rate;
 
         // Store in cache
         set_cache(cache_key, result);
 
-        Ok(result)
+        Ok(result.to_string())
     } else {
         Err(format!("Target currency {} not found", target_currency))
     }

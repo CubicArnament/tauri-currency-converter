@@ -41,8 +41,11 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
-      - name: Check TypeScript/Svelte
-        run: npm run check
+      - name: Check TypeScript compilation
+        run: npm run check:ts
+
+      - name: Check TypeScript/Svelte types
+        run: npm run check:svelte
 
       - name: Cargo check
         working-directory: src-tauri
@@ -64,6 +67,7 @@ jobs:
       - name: Summary
         run: |
           echo "✅ All PR checks passed!"
+          echo "- TypeScript compilation: OK"
           echo "- TypeScript/Svelte types: OK"
           echo "- Rust compilation: OK"
           echo "- Rust linting: OK"
