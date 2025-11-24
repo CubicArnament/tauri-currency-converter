@@ -1,0 +1,248 @@
+name: Release Nightly Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 2.0.0-nightly.2)'
+        required: true
+        type: string
+      create_tag:
+        description: 'Create git tag for this version'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  release-nightly:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact-name: Windows
+          - os: ubuntu-latest
+            artifact-name: Linux
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config clang-14 lld libssl-dev libglib2.0-dev libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo ln -sf /usr/bin/clang-14 /usr/bin/clang
+          sudo ln -sf /usr/bin/clang++-14 /usr/bin/clang++
+
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          where cl.exe
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Check TypeScript compilation
+        run: npm run check:ts
+
+      - name: Check TypeScript/Svelte types
+        run: npm run check:svelte
+
+      - name: Cargo check
+        working-directory: src-tauri
+        run: cargo check --verbose
+
+      - name: Update version in package.json
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${{ inputs.version }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('Updated version to', pkg.version);
+          "
+
+      - name: Update version in Cargo.toml
+        working-directory: src-tauri
+        run: |
+          $content = Get-Content Cargo.toml -Raw
+          $content = $content -replace 'version = "[^"]+"', 'version = "${{ inputs.version }}"'
+          Set-Content Cargo.toml $content
+
+      - name: Update version in tauri.conf.json
+        run: |
+          $content = Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json
+          $content.productVersion = '${{ inputs.version }}'
+          $content | ConvertTo-Json -Depth 10 | Set-Content src-tauri/tauri.conf.json
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Build Tauri app (Windows)
+        if: runner.os == 'Windows'
+        run: npm run tauri:build
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+
+      - name: Build Tauri app (Linux)
+        if: runner.os == 'Linux'
+        run: npm run tauri:build
+        env:
+          CC: clang
+          CXX: clang++
+          RUSTFLAGS: "-C linker=clang -C link-arg=-fuse-ld=lld"
+
+      - name: Locate Windows artifacts
+        if: runner.os == 'Windows'
+        id: windows-artifacts
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path "src-tauri/target/release" -Name "currency-converter.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $msi = Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Name "*.msi" -ErrorAction SilentlyContinue | Select-Object -First 1
+          
+          if ($exe) {
+            Copy-Item "src-tauri/target/release/$exe" "src-tauri/target/release/currency-converter-${{ inputs.version }}-x86_64.exe"
+            Write-Host "✅ EXE prepared"
+          }
+          
+          if ($msi) {
+            Copy-Item "src-tauri/target/release/bundle/msi/$msi" "src-tauri/target/release/bundle/msi/currency-converter-${{ inputs.version }}-x86_64.msi"
+            Write-Host "✅ MSI prepared"
+          }
+
+      - name: Locate Linux artifacts
+        if: runner.os == 'Linux'
+        id: linux-artifacts
+        run: |
+          APPIMAGE=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" -type f | head -1)
+          if [ ! -z "$APPIMAGE" ]; then
+            chmod +x "$APPIMAGE"
+            cp "$APPIMAGE" "src-tauri/target/release/bundle/appimage/currency-converter-${{ inputs.version }}-x86_64.AppImage"
+            echo "✅ AppImage prepared"
+          fi
+          
+          DEB=$(find src-tauri/target/release/bundle/deb -name "*.deb" -type f | head -1)
+          if [ ! -z "$DEB" ]; then
+            cp "$DEB" "$(dirname "$DEB")/currency-converter-${{ inputs.version }}-x86_64.deb"
+            echo "✅ DEB prepared"
+          fi
+
+      - name: Upload Windows EXE
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: currency-converter-${{ inputs.version }}-windows-exe
+          path: src-tauri/target/release/currency-converter-${{ inputs.version }}-x86_64.exe
+          retention-days: 30
+
+      - name: Upload Windows MSI
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: currency-converter-${{ inputs.version }}-windows-msi
+          path: src-tauri/target/release/bundle/msi/currency-converter-${{ inputs.version }}-x86_64.msi
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Linux AppImage
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: currency-converter-${{ inputs.version }}-linux-appimage
+          path: src-tauri/target/release/bundle/appimage/currency-converter-${{ inputs.version }}-x86_64.AppImage
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Linux DEB
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: currency-converter-${{ inputs.version }}-linux-deb
+          path: src-tauri/target/release/bundle/deb/currency-converter-${{ inputs.version }}-x86_64.deb
+          if-no-files-found: warn
+          retention-days: 30
+
+  create-release:
+    needs: [release-nightly]
+    runs-on: ubuntu-latest
+    if: always() && needs.release-nightly.result == 'success'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create Git tag
+        if: ${{ inputs.create_tag }}
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git tag -a v${{ inputs.version }} -m "Nightly Release ${{ inputs.version }}"
+          git push origin v${{ inputs.version }}
+
+      - name: Collect release files
+        run: |
+          mkdir -p release-files
+          find artifacts -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.AppImage" -o -name "*.deb" \) -exec cp {} release-files/ \;
+          ls -lh release-files/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ inputs.version }}
+          name: Nightly Release ${{ inputs.version }}
+          body: |
+            # Nightly Release ${{ inputs.version }}
+            
+            This is a pre-release build from the `nightly` branch.
+            
+            **⚠️ WARNING**: This build may be unstable and is for testing purposes only.
+            
+            ## Artifacts
+            - **Windows**: Portable EXE and MSI installer
+            - **Linux**: AppImage and DEB package
+            
+            ## Changes
+            Built from: `${{ github.sha }}`
+            Branch: `${{ github.ref_name }}`
+            
+            For stable releases, please use the main branch.
+          files: |
+            release-files/currency-converter-*-x86_64.exe
+            release-files/currency-converter-*-x86_64.msi
+            release-files/currency-converter-*-x86_64.AppImage
+            release-files/currency-converter-*-x86_64.deb
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print summary
+        run: |
+          echo "✅ Release created successfully!"
+          echo ""
+          echo "📦 Release: v${{ inputs.version }}"
+          echo "🔗 Tag: v${{ inputs.version }}"
+          echo "📍 Branch: ${{ github.ref_name }}"
+          echo "⚠️  Pre-release: YES"
+          echo ""
+          echo "📂 Artifacts:"
+          ls -lh release-files/ | tail -n +2 | awk '{print "  - " $9 " (" $5 ")"}'
