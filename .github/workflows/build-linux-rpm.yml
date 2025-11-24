@@ -1,0 +1,127 @@
+name: Build Linux RPM (AlmaLinux)
+
+on:
+  push:
+    branches: [main, develop]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-linux-rpm:
+    runs-on: ubuntu-latest
+    container:
+      image: almalinux:9
+      options: --privileged
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          dnf groupinstall -y "Development Tools"
+          dnf install -y clang lld pkg-config openssl-devel glib2-devel gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel librsvg2-devel patchelf curl
+          
+          # Verify pkg-config
+          pkg-config --modversion glib-2.0
+
+      - name: Setup Node.js
+        run: |
+          curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+          dnf install -y nodejs
+
+      - name: Setup Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          source "$HOME/.cargo/env"
+          rustup target add x86_64-unknown-linux-gnu
+
+      - name: Source Rust environment
+        run: source "$HOME/.cargo/env"
+
+      - name: Install Node dependencies
+        run: |
+          source "$HOME/.cargo/env"
+          npm install
+
+      - name: Check TypeScript compilation
+        run: |
+          source "$HOME/.cargo/env"
+          npm run check:ts
+
+      - name: Check TypeScript/Svelte types
+        run: |
+          source "$HOME/.cargo/env"
+          npm run check:svelte
+
+      - name: Build frontend
+        run: |
+          source "$HOME/.cargo/env"
+          npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Build Tauri app
+        run: |
+          source "$HOME/.cargo/env"
+          npm run tauri:build
+        env:
+          CC: clang
+          CXX: clang++
+          RUSTFLAGS: "-C linker=clang -C link-arg=-fuse-ld=lld"
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          source "$HOME/.cargo/env"
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Locate RPM package
+        id: locate_rpm
+        run: |
+          RPM_PATH=$(find src-tauri/target/release/bundle -name "*.rpm" -type f | head -1)
+          if [ -z "$RPM_PATH" ]; then
+            echo "ERROR: RPM not found in bundle!"
+            find src-tauri/target/release/bundle -type f | head -20
+            exit 1
+          fi
+          echo "RPM_PATH=$RPM_PATH" >> $GITHUB_OUTPUT
+          echo "Found RPM: $RPM_PATH"
+
+      - name: Rename RPM with version
+        run: |
+          RPM_FILE="${{ steps.locate_rpm.outputs.RPM_PATH }}"
+          RPM_DIR=$(dirname "$RPM_FILE")
+          NEW_NAME="currency-converter-v${{ steps.version.outputs.VERSION }}-x86_64.rpm"
+          mv "$RPM_FILE" "$RPM_DIR/$NEW_NAME"
+          echo "Renamed RPM to: $NEW_NAME"
+
+      - name: Upload RPM as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: currency-converter-linux-x86_64-rpm
+          path: src-tauri/target/release/bundle/rpm/currency-converter-v*.rpm
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish to GitHub Release (on tag only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: src-tauri/target/release/bundle/rpm/currency-converter-v*.rpm
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Print build summary
+        run: |
+          echo "✅ Build completed successfully!"
+          echo "Platform: AlmaLinux 9 (RPM)"
+          echo "Version: v${{ steps.version.outputs.VERSION }}"
+          echo ""
+          echo "📦 Artifacts:"
+          ls -lh src-tauri/target/release/bundle/rpm/currency-converter-v*.rpm

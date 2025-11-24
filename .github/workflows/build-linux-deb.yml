@@ -1,0 +1,119 @@
+name: Build Linux DEB
+
+on:
+  push:
+    branches: [main, develop]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-linux-deb:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            rustflags: "-C linker=clang -C link-arg=-fuse-ld=lld"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config clang-14 lld libssl-dev libglib2.0-dev libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo ln -sf /usr/bin/clang-14 /usr/bin/clang
+          sudo ln -sf /usr/bin/clang++-14 /usr/bin/clang++
+          
+          # Verify pkg-config can find glib-2.0
+          pkg-config --modversion glib-2.0
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Check TypeScript compilation
+        run: npm run check:ts
+
+      - name: Check TypeScript/Svelte types
+        run: npm run check:svelte
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Build Tauri app
+        run: npm run tauri:build
+        env:
+          CC: clang
+          CXX: clang++
+          RUSTFLAGS: ${{ matrix.rustflags }}
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Locate DEB package
+        id: locate_deb
+        run: |
+          DEB_PATH=$(find src-tauri/target/release/bundle -name "*.deb" -type f | head -1)
+          if [ -z "$DEB_PATH" ]; then
+            echo "ERROR: DEB not found in bundle!"
+            find src-tauri/target/release/bundle -type f | head -20
+            exit 1
+          fi
+          echo "DEB_PATH=$DEB_PATH" >> $GITHUB_OUTPUT
+          echo "Found DEB: $DEB_PATH"
+
+      - name: Rename DEB with version
+        run: |
+          DEB_FILE="${{ steps.locate_deb.outputs.DEB_PATH }}"
+          DEB_DIR=$(dirname "$DEB_FILE")
+          NEW_NAME="currency-converter-v${{ steps.version.outputs.VERSION }}-x86_64.deb"
+          mv "$DEB_FILE" "$DEB_DIR/$NEW_NAME"
+          echo "Renamed DEB to: $NEW_NAME"
+
+      - name: Upload DEB as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: currency-converter-linux-x86_64-deb
+          path: src-tauri/target/release/bundle/deb/currency-converter-v*.deb
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish to GitHub Release (on tag only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: src-tauri/target/release/bundle/deb/currency-converter-v*.deb
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Print build summary
+        run: |
+          echo "✅ Build completed successfully!"
+          echo "Platform: Linux x86_64 (DEB)"
+          echo "Version: v${{ steps.version.outputs.VERSION }}"
+          echo ""
+          echo "📦 Artifacts:"
+          ls -lh src-tauri/target/release/bundle/deb/currency-converter-v*.deb
