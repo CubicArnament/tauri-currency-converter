@@ -65,8 +65,9 @@ jobs:
       - name: Clean Cargo build cache for fresh version read
         shell: pwsh
         run: |
-          Remove-Item -Path "src-tauri/target/release" -Recurse -Force -ErrorAction SilentlyContinue
-          Write-Host "Cleaned src-tauri/target/release"
+          Remove-Item -Path "src-tauri/target" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "$env:USERPROFILE\.cargo\registry\cache" -Recurse -Force -ErrorAction SilentlyContinue
+          Write-Host "Cleaned cargo cache"
 
       - name: Build Tauri app
         run: cargo build --release --target ${{ matrix.target }}
