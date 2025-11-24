@@ -5,8 +5,8 @@
 [![Build Linux](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-linux.yml)
 [![Build Windows](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/build-windows.yml)
 [![Lint & Type Check](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/CubicArnament/tauri-currency-converter/actions/workflows/lint.yml)
-[![Latest Release](https://img.shields.io/github/v/release/CubicArnament/tauri-currency-converter?style=flat-square&label=Latest%20Release)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/CubicArnament/tauri-currency-converter/total?style=flat-square&label=Downloads)](https://github.com/CubicArnament/tauri-currency-converter/releases)
+[![Latest Release](https://img.shields.io/github/v/release/CubicArnament/tauri-currency-converter?style=flat-square&label=Latest%20Release&cache=0)](https://github.com/CubicArnament/tauri-currency-converter/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/CubicArnament/tauri-currency-converter/total?style=flat-square&label=Downloads&cache=0)](https://github.com/CubicArnament/tauri-currency-converter/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.md)
 
 **Современное кроссплатформенное приложение для конвертации валют**
