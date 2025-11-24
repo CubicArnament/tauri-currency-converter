@@ -144,14 +144,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Create source code archive (zip)
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: bash
-        run: |
-          version="${{ steps.version.outputs.VERSION }}"
-          git archive --format=zip --prefix="currency-converter-v${version}/" -o "source-code-v${version}.zip" HEAD
-          ls -lh "source-code-v${version}.zip"
-
       - name: Debug - List all artifacts before release
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
@@ -180,7 +172,6 @@ jobs:
           files: |
             src-tauri/target/release/currency-converter-v*.exe
             src-tauri/target/release/bundle/msi/currency-converter-v*.msi
-            source-code-v*.zip
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
         env:
