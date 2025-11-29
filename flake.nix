@@ -1,5 +1,5 @@
 {
-  description = "Development environment for the Tauri Currency Converter";
+  description = "A complete Nix flake for the Tauri Currency Converter";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -16,57 +16,105 @@
         # Get the stable Rust toolchain
         rustToolchain = fenix.packages.${system}.stable.toolchain;
 
-        # Use crane to build Rust dependencies
+        # Crane library for building Rust dependencies
         craneLib = crane.lib.${system}.overrideToolchain rustToolchain;
 
-        # Project source
+        # Source directories
         src = ./.;
         tauri-src = ./src-tauri;
 
         # Build only the Cargo dependencies to cache them
+        # This is used by both the dev shell and the final build
         cargoArtifacts = craneLib.buildDepsOnly {
           src = tauri-src;
           nativeBuildInputs = with pkgs; [
             pkg-config
           ];
           buildInputs = with pkgs; [
-            # Tauri's Linux dependencies
-            webkitgtk
-            gtk3
-            glib
-            dbus
-            openssl
-            librsvg
+            webkitgtk gtk3 glib dbus openssl librsvg
           ];
+        };
+
+        # Main package for `nix build`
+        tauriAppPackage = pkgs.stdenv.mkDerivation {
+          pname = "tauri-currency-converter";
+          version = "2.0.0"; # From package.json
+          src = src;
+
+          nativeBuildInputs = with pkgs; [
+            # Frontend
+            nodejs_20
+            # Backend
+            rustToolchain
+            # Build tools
+            pkg-config clang llvmPackages.bintools
+            # Tauri system dependencies
+            webkitgtk gtk3 glib dbus openssl librsvg appstream desktop-file-utils
+          ];
+
+          buildPhase = ''
+            runHook preBuild
+
+            export HOME=$(mktemp -d)
+
+            # 1. Build frontend
+            echo "Building frontend..."
+            npm install
+            npm run build
+
+            # 2. Build backend and bundle with Tauri
+            echo "Building backend and bundling..."
+            cd src-tauri
+
+            # Use pre-built Rust dependencies from crane for caching
+            export CARGO_TARGET_DIR="../target"
+            mkdir -p ../target
+            ln -sf ${cargoArtifacts} ../target/release
+
+            # Run the Tauri build command
+            cargo tauri build --release
+
+            runHook postBuild
+          '';
+
+          installPhase = ''
+            runHook preInstall
+
+            # Install the final AppImage and .desktop file
+            # The path is determined by the tauri build process
+            local bundle_dir="src-tauri/target/release/bundle"
+            install -Dm755 $bundle_dir/appimage/*.AppImage $out/bin/currency-converter
+            install -Dm644 $bundle_dir/appimage/*.desktop $out/share/applications/com.xcubicarnament.currency-converter.desktop
+
+            runHook postInstall
+          '';
         };
 
       in
       {
+        # For `nix build` -> ./result/bin/currency-converter
+        packages.default = tauriAppPackage;
+
+        # For `nix run`
+        apps.default = flake-utils.lib.mkApp { drv = tauriAppPackage; };
+
+        # For `nix flake check`
+        checks.default = tauriAppPackage;
+
+        # For `nix develop`
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            # Frontend dependencies
-            nodejs_20 # Using LTS Node.js
-
-            # Backend dependencies
+            # Frontend
+            nodejs_20
+            # Backend
             rustToolchain
-
             # System libraries for Tauri
-            webkitgtk
-            gtk3
-            glib
-            dbus
-            openssl
-            librsvg
-            appstream
-            desktop-file-utils
-
+            webkitgtk gtk3 glib dbus openssl librsvg appstream desktop-file-utils
             # Build tools
-            pkg-config
-            clang
-            llvmPackages.bintools
+            pkg-config clang llvmPackages.bintools
           ];
 
-          # Environment setup for the development shell
+          # Environment for the development shell
           shellHook = ''
             # Point Cargo to the cached dependencies to speed up builds
             export CARGO_TARGET_DIR="target"
