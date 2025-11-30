@@ -23,7 +23,7 @@ jobs:
           dnf -y update
           dnf -y makecache
           dnf groupinstall -y "Development Tools"
-          dnf install -y clang lld pkg-config openssl-devel glib2-devel gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel librsvg2-devel patchelf curl
+          dnf install -y --allowerasing clang lld pkg-config openssl-devel glib2-devel gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel librsvg2-devel patchelf curl
           
           # Verify pkg-config
           pkg-config --modversion glib-2.0
