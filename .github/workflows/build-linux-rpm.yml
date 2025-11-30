@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install system dependencies
         run: |
@@ -52,7 +54,6 @@ jobs:
         id: nightly_version
         run: |
           source "$HOME/.cargo/env"
-          git fetch --prune --unshallow
           commits=$(git rev-list --count HEAD)
           version=$(node -e "console.log(require('./package.json').version)")
           new_version="$version-nightly.$commits"
