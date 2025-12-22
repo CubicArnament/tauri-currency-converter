@@ -31,7 +31,7 @@ export async function convertCurrency(request: ConversionRequest): Promise<Conve
   const result = await invoke<unknown>('convert_currency', {
     baseCurrency: request.baseCurrency,
     targetCurrency: request.targetCurrency,
-    amount: request.amount
+    amount: request.amount,
   });
 
   // Validate and cast to ConversionResult
@@ -40,6 +40,35 @@ export async function convertCurrency(request: ConversionRequest): Promise<Conve
   }
 
   return castToConversionResult(result);
+}
+
+/**
+ * Get application version from Rust backend
+ * @returns Application version string
+ * @throws {Error} If API call fails
+ */
+export async function getAppVersion(): Promise<string> {
+  try {
+    const result = await invoke<string>('get_app_version');
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to get app version: ${message}`);
+  }
+}
+
+/**
+ * Save custom CSS to file via Rust backend
+ * @param cssContent - CSS content to save
+ * @throws {Error} If API call fails
+ */
+export async function saveCustomCss(cssContent: string): Promise<void> {
+  try {
+    await invoke('save_custom_css', { cssContent });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to save custom CSS: ${message}`);
+  }
 }
 
 /**

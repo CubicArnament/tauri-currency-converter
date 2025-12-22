@@ -32,14 +32,13 @@ export type CurrenciesMap = Record<CurrencyCode, string>;
 /**
  * Rust API command results
  */
-export namespace RustAPI {
-  export interface GetCurrenciesResult {
-    [key: string]: string;
-  }
+export interface RustAPIGetCurrenciesResult {
+  [key: string]: string;
+}
 
-  export interface ConvertCurrencyResult extends String {
-    // Result is a string representation of Decimal
-  }
+export interface RustAPIConvertCurrencyResult {
+  // Result is a string representation of Decimal
+  toString(): string;
 }
 
 /**
@@ -57,11 +56,7 @@ export const TypeGuards = {
    * Validates that a value is a valid decimal string (from Rust)
    */
   isDecimalString(value: unknown): value is ConversionResult {
-    return (
-      typeof value === 'string' &&
-      value.length > 0 &&
-      !isNaN(parseFloat(value))
-    );
+    return typeof value === 'string' && value.length > 0 && !isNaN(parseFloat(value));
   },
 
   /**
@@ -70,14 +65,14 @@ export const TypeGuards = {
   isCurrenciesMap(value: unknown): value is CurrenciesMap {
     if (typeof value !== 'object' || value === null) return false;
     const map = value as Record<string, unknown>;
-    return Object.keys(map).length > 0 &&
+    return (
+      Object.keys(map).length > 0 &&
       Object.entries(map).every(
         ([code, name]) =>
-          typeof code === 'string' &&
-          /^[A-Z]{3}$/.test(code) &&
-          typeof name === 'string'
-      );
-  }
+          typeof code === 'string' && /^[A-Z]{3}$/.test(code) && typeof name === 'string'
+      )
+    );
+  },
 };
 
 /**
