@@ -1,8 +1,10 @@
+use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use rust_decimal::Decimal;
+
+use tauri::Manager;
 
 #[derive(Deserialize, Debug)]
 struct ExchangeRateResponse {
@@ -122,6 +124,38 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
+fn get_app_version() -> Result<String, String> {
+    Ok(env!("CARGO_PKG_VERSION").to_string())
+}
+
+#[tauri::command]
+fn save_custom_css(css_content: String, app_handle: tauri::AppHandle) -> Result<(), String> {
+    use std::fs;
+
+    // Получаем директорию конфигурации приложения через app_handle
+    let mut config_dir = app_handle
+        .path()
+        .config_dir()
+        .map_err(|e| format!("Не удалось получить директорию конфигурации: {}", e))?;
+
+    // Добавляем имя приложения к пути
+    config_dir.push("currency-converter");
+
+    // Создаем директорию, если она не существует
+    fs::create_dir_all(&config_dir)
+        .map_err(|e| format!("Не удалось создать директорию конфигурации: {}", e))?;
+
+    // Определяем путь к файлу CSS
+    let css_file_path = config_dir.join("custom.css");
+
+    // Записываем CSS в файл
+    fs::write(&css_file_path, css_content)
+        .map_err(|e| format!("Не удалось записать CSS в файл: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn get_currencies() -> Result<HashMap<String, String>, String> {
     // Return only curated list of popular and CIS currencies
     Ok(get_currency_names())
@@ -138,8 +172,8 @@ async fn convert_currency(
     }
 
     // Parse amount from string to Decimal for precision
-    let amount_decimal = Decimal::from_str_exact(&amount)
-        .map_err(|_| "Invalid amount format".to_string())?;
+    let amount_decimal =
+        Decimal::from_str_exact(&amount).map_err(|_| "Invalid amount format".to_string())?;
 
     // Generate cache key
     let cache_key = format!("{}|{}|{}", base_currency, target_currency, amount);
@@ -179,6 +213,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
+            get_app_version,
+            save_custom_css,
             convert_currency,
             get_currencies
         ])
